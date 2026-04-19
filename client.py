@@ -1,9 +1,21 @@
 from websockets.sync.client import connect
 
-def hello():
-    with connect("ws://localhost:8765") as websocket:
-        websocket.send("Hello world!")
-        message = websocket.recv()
-        print(f"Received: {message}")
+#Adding a while loop to send messsage through terminal 
 
-hello()
+def chat():
+    with connect("ws://localhost:8765") as websocket:
+        print("Welcome to Chater. Type 'exit' to quit.\n")
+
+        while True:
+            msg = input("Alice: ")
+
+            if msg.lower() == "exit": 
+                print("Connection closed")
+                break
+            
+            websocket.send(msg)
+            reply = websocket.recv()
+            print(f"Received: {reply}")  
+
+chat()
+
