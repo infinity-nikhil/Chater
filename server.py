@@ -1,41 +1,51 @@
 import asyncio
 from websockets.asyncio.server import serve
 
-clients = {}  # websocket -> username
+clients = {}  # username -> websocket
 
 async def handler(websocket):
-    # 👤 Step 1: username 
     await websocket.send("Enter your name:")
     name = await websocket.recv()
 
-    # store user
-    clients[websocket] = name
+    clients[name] = websocket
     print(f"{name} connected")
-
-    # 🔔 notify others
-    for client in clients:
-        if client != websocket:
-            await client.send(f"{name} joined the chat")
 
     try:
         async for message in websocket:
-            # 📨 send to everyone with name
-            for client in clients:
-                if client != websocket:
-                    await client.send(f"{name}: {message}")
+
+            # 👉 check DM format
+            if message.startswith("@"):
+                try:
+                    target_name, msg = message.split(" ", 1)
+                    target_name = target_name[1:]  # remove @
+
+                    if target_name in clients:
+                        target_ws = clients[target_name]
+
+                        # send to receiver
+                        await target_ws.send(f"{name} (DM): {msg}")
+
+                        # optional: sender ko bhi dikhao
+                        await websocket.send(f"You → {target_name}: {msg}")
+
+                    else:
+                        await websocket.send("User not found ❌")
+
+                except:
+                    await websocket.send("Invalid format. Use: @username message")
+
+            else:
+                # fallback: broadcast (optional)
+                for user, ws in clients.items():
+                    if ws != websocket:
+                        await ws.send(f"{name}: {message}")
 
     except:
         pass
 
     finally:
-        # ❌ remove on disconnect
-        left_user = clients[websocket]
-        del clients[websocket]
-
-        for client in clients:
-            await client.send(f"{left_user} left the chat")
-
-        print(f"{left_user} disconnected")
+        del clients[name]
+        print(f"{name} disconnected")
 
 async def main():
     async with serve(handler, "localhost", 8765):
