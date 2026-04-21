@@ -1,3 +1,5 @@
-#### Till now we where only making connections and running the same clients multiple times
--> Now, we will map the user and make connection btwn them 
--> In simple, we are making multiple user system i.e. ALice and Bob
+Now the updates carry personal DM system:
+
+You can send personal DM as: @Bob hello bro -> Msg will be sent to Bob as "hello bro"
+
+And if you don't mention then it will be sent to all. 
